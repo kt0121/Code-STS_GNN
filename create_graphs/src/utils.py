@@ -1,3 +1,6 @@
+import json
+
+import numpy
 import stanza
 
 try:
@@ -16,7 +19,6 @@ def get_graph_attr(sentence, model, stop_words_list):
     sent = doc.sentences[0]
     for word in sent.words:
         if word.lemma not in stop_words_list:
-            print(word.lemma)
             lemmas.append(model[word.lemma])
             lemmas_index[word.lemma] = word.id - 1 - count_stop_words
             word.head != 0 and edges_raw.append(
@@ -27,3 +29,15 @@ def get_graph_attr(sentence, model, stop_words_list):
 
     edges = list(map(lambda x: [lemmas_index[x[0]], lemmas_index[x[1]]], edges_raw))
     return (lemmas, edges)
+
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, numpy.integer):
+            return int(obj)
+        elif isinstance(obj, numpy.floating):
+            return float(obj)
+        elif isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
