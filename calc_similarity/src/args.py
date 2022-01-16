@@ -7,15 +7,22 @@ def argument_parser():
     parser.add_argument(
         "--train-dir",
         nargs="?",
-        default="./dataset/train/",
+        default="./dataset/SICK/train/",
         help="Folder with training graph pair jsons.",
     )
 
     parser.add_argument(
         "--test-dir",
         nargs="?",
-        default="./dataset/test/",
+        default="./dataset/SICK/test/",
         help="Folder with testing graph pair jsons.",
+    )
+
+    parser.add_argument(
+        "--valid-dir",
+        nargs="?",
+        default="./dataset/SICK/validation/",
+        help="Folder with vaidation graph pair jsons.",
     )
 
     parser.add_argument(
@@ -26,6 +33,12 @@ def argument_parser():
         help="Number of training epochs. Default is 10.",
     )
 
+    parser.add_argument(
+        "--early-stop",
+        type=int,
+        default=10,
+        help="Number of early stopping count. Default is 10.",
+    )
     parser.add_argument(
         "-b",
         "--batch-size",
