@@ -6,23 +6,29 @@ def argument_parser():
 
     parser.add_argument(
         "--train-dir",
-        nargs="?",
-        default="./dataset/SICK/train/",
+        nargs="*",
+        default=["./dataset/SICK/train/"],
         help="Folder with training graph pair jsons.",
     )
 
     parser.add_argument(
         "--test-dir",
-        nargs="?",
-        default="./dataset/SICK/test/",
+        nargs="*",
+        default=["./dataset/SICK/test/"],
         help="Folder with testing graph pair jsons.",
     )
 
     parser.add_argument(
         "--valid-dir",
-        nargs="?",
-        default="./dataset/SICK/validation/",
+        nargs="*",
+        default=["./dataset/SICK/validation/"],
         help="Folder with vaidation graph pair jsons.",
+    )
+
+    parser.add_argument(
+        "--tensorboard-dir",
+        default="./logs/TensorBoard/",
+        help="Folder with TensorBoard Logs.",
     )
 
     parser.add_argument(
@@ -65,22 +71,29 @@ def argument_parser():
     parser.add_argument(
         "--channel-1",
         type=int,
-        default=128,
-        help="Size of 1st convolution output. Default: 128",
+        default=256,
+        help="Size of 1st convolution output. Default: 256",
     )
 
     parser.add_argument(
         "--channel-2",
         type=int,
-        default=64,
-        help="Size of 2nd convolution output. Default: 64",
+        default=128,
+        help="Size of 2nd convolution output. Default: 128",
     )
 
     parser.add_argument(
         "--channel-3",
         type=int,
+        default=64,
+        help="Size of 3rd convolution output. Default: 64",
+    )
+
+    parser.add_argument(
+        "--channel-4",
+        type=int,
         default=32,
-        help="Size of 3rd convolution output. Default: 32",
+        help="Size of 4th convolution output. Default: 32",
     )
 
     parser.add_argument(
