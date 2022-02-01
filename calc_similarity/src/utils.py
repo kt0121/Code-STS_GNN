@@ -5,12 +5,11 @@ import numpy as np
 import torch
 from texttable import Texttable
 
+# torch.set_default_tensor_type("torch.cuda.FloatTensor")
+
 
 def tab_printer(args):
-    """
-    Function to print the logs in a nice tabular format.
-    :param args: Parameters used for the model.
-    """
+
     args = vars(args)
     keys = sorted(args.keys())
     t = Texttable()
@@ -20,22 +19,13 @@ def tab_printer(args):
 
 
 def process_pair(path):
-    """
-    Reading a json file with a pair of graphs.
-    :param path: Path to a JSON file.
-    :return data: Dictionary with data.
-    """
+
     data = json.load(open(path))
     return data
 
 
 def calculate_loss(prediction, target):
-    """
-    Calculating the squared loss on the normalized GED.
-    :param prediction: Predicted log value of GED.
-    :param target: Factual log transofmed GED.
-    :return score: Squared error.
-    """
+
     prediction = -math.log(prediction)
     target = -math.log(target)
     score = (prediction - target) ** 2
@@ -86,9 +76,9 @@ class EarlyStopping:
             self.save_checkpoint(val_loss, model)
         elif score < self.best_score + self.delta:
             self.counter += 1
-            self.trace_func(
-                f"EarlyStopping counter: {self.counter} out of {self.patience}"
-            )
+            # self.trace_func(
+            #     f"EarlyStopping counter: {self.counter} out of {self.patience}"
+            # )
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -98,11 +88,11 @@ class EarlyStopping:
 
     def save_checkpoint(self, val_loss, model):
         """Saves model when validation loss decrease."""
-        if self.verbose:
-            self.trace_func(
-                f"""Validation loss decreased (
-                    {self.val_loss_min:.6f} --> {val_loss:.6f}
-                    ).  Saving model ..."""
-            )
+        # if self.verbose:
+        # self.trace_func(
+        #     f"""Validation loss decreased (
+        #         {self.val_loss_min:.6f} --> {val_loss:.6f}
+        #         ).  Saving model ..."""
+        # )
         torch.save(model.state_dict(), self.path)
         self.val_loss_min = val_loss

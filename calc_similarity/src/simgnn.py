@@ -6,7 +6,8 @@ import numpy as np
 import torch
 from scipy.stats import spearmanr
 from torch.utils.tensorboard import SummaryWriter
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GCNConv, SAGEConv
+from torch_geometric.nn.pool.sag_pool import SAGPooling
 from tqdm import tqdm, trange
 
 from layers import AttentionModule, TenorNetworkModule
@@ -26,12 +27,21 @@ class SimGNN(torch.nn.Module):
         self.init_layers()
 
     def init_layers(self):
-        self.gcn_1 = GCNConv(self.args.input_dim, self.args.channel_1)
-        self.gcn_2 = GCNConv(self.args.channel_1, self.args.channel_2)
-        self.gcn_3 = GCNConv(self.args.channel_2, self.args.channel_3)
-        self.gcn_4 = GCNConv(self.args.channel_3, self.args.channel_4)
-        self.attention = AttentionModule(self.args)
-        self.ntn = TenorNetworkModule(self.args)
+        if self.args.use_sage:
+            self.gcn_1 = SAGEConv(self.args.input_dim, self.args.channel_1)
+            self.gcn_2 = SAGEConv(self.args.channel_1, self.args.channel_2)
+            self.gcn_3 = SAGEConv(self.args.channel_2, self.args.channel_3)
+        else:
+            self.gcn_1 = GCNConv(self.args.input_dim, self.args.channel_1)
+            self.gcn_2 = GCNConv(self.args.channel_1, self.args.channel_2)
+            self.gcn_3 = GCNConv(self.args.channel_2, self.args.channel_3)
+
+        if self.args.use_sagpool:
+            self.pool = SAGPooling(in_channels=self.args.channel_3, ratio=1)
+        else:
+            self.pool = AttentionModule(self.args.channel_3)
+
+        self.ntn = TenorNetworkModule(self.args.channel_3)
         self.fully_connected_first = torch.nn.Linear(16, 16)
         self.scoring_layer = torch.nn.Linear(16, 1)
 
@@ -49,12 +59,12 @@ class SimGNN(torch.nn.Module):
         )
 
         features = self.gcn_3(features, edges)
-        features = torch.nn.functional.relu(features)
-        features = torch.nn.functional.dropout(
-            features, p=self.args.dropout, training=self.training
-        )
+        # features = torch.nn.functional.relu(features)
+        # features = torch.nn.functional.dropout(
+        #     features, p=self.args.dropout, training=self.training
+        # )
 
-        features = self.gcn_4(features, edges)
+        # features = self.gcn_4(features, edges)
         return features
 
     def forward(self, data):
@@ -66,8 +76,12 @@ class SimGNN(torch.nn.Module):
         features_1 = self.gcn_layers(edges_1, features_1)
         features_2 = self.gcn_layers(edges_2, features_2)
 
-        features_1 = self.attention(features_1)
-        features_2 = self.attention(features_2)
+        if self.args.use_sagpool:
+            features_1 = self.pool(features_1, edges_1)[0].view(-1, 1)
+            features_2 = self.pool(features_2, edges_2)[0].view(-1, 1)
+        else:
+            features_1 = self.pool(features_1)
+            features_2 = self.pool(features_2)
 
         scores = self.ntn(features_1, features_2)
         scores = torch.t(scores)
@@ -88,13 +102,13 @@ class SimGNNTrainer(object):
 
     def load_dataset(self):
         for graph_path in self.args.train_dir:
-            self.training_graphs.extend(glob.glob(graph_path + "*.json"))
+            self.training_graphs.extend(glob.glob(f"{graph_path}/*.json"))
 
         for graph_path in self.args.test_dir:
-            self.testing_graphs.extend(glob.glob(graph_path + "*.json"))
+            self.testing_graphs.extend(glob.glob(f"{graph_path}/*.json"))
 
         for graph_path in self.args.valid_dir:
-            self.validation_graphs.extend(glob.glob(graph_path + "*.json"))
+            self.validation_graphs.extend(glob.glob(f"{graph_path}/*.json"))
 
     def create_batches(self):
         random.shuffle(self.training_graphs)
@@ -144,6 +158,9 @@ class SimGNNTrainer(object):
             except IndexError:
                 err_count += 1
                 continue
+            except AssertionError:
+                err_count += 1
+                continue
             losses = losses + torch.nn.functional.mse_loss(data["target"], prediction)
         losses.backward(retain_graph=True)
         self.optimizer.step()
@@ -165,11 +182,13 @@ class SimGNNTrainer(object):
 
         self.model.train()
         epochs = trange(self.args.epochs, leave=True, desc="Epoch")
+        # epochs = range(self.args.epochs)
         for epoch in epochs:
             batches = self.create_batches()
             self.loss_sum = 0
             main_index = 0
             for batch in tqdm(batches, total=len(batches), desc="Batches"):
+                # for batch in batches:
                 loss_score, err_count = self.process_batch(batch)
                 main_index = main_index + len(batch) - err_count
                 self.loss_sum = self.loss_sum + loss_score
@@ -181,12 +200,16 @@ class SimGNNTrainer(object):
             val_losses = 0
             val_index = 0
             for graph_pair in tqdm(self.validation_graphs):
+                # for graph_pair in self.validation_graphs:
                 data = process_pair(graph_pair)
                 val_index += 1
                 data = self.transfer_to_torch(data)
                 try:
                     prediction = self.model(data)
                 except IndexError:
+                    val_index -= 1
+                    continue
+                except AssertionError:
                     val_index -= 1
                     continue
                 val_losses += torch.nn.functional.mse_loss(data["target"], prediction)
@@ -207,12 +230,15 @@ class SimGNNTrainer(object):
         self.predictions = []
         self.x = []
         for graph_pair in tqdm(self.testing_graphs):
+            # for graph_pair in self.testing_graphs:
             data_raw = process_pair(graph_pair)
             data = self.transfer_to_torch(data_raw)
             target = data["target"]
             try:
                 prediction = self.model(data)
             except IndexError:
+                continue
+            except AssertionError:
                 continue
             self.ground_truth.append(calculate_normalized_ged(data_raw))
             self.predictions.append(prediction.detach().numpy()[0][0])
@@ -232,7 +258,7 @@ class SimGNNTrainer(object):
         print(f"\nSpearman's r: {spearman_r}")
 
     def save(self):
-        # os.makedirs(self.args.save_path, exist_ok=True)
+        os.makedirs(os.path.dirname(self.args.save_path), exist_ok=True)
         torch.save(self.model.state_dict(), self.args.save_path)
 
     def load(self):

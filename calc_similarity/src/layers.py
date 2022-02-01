@@ -2,17 +2,17 @@ import torch
 
 
 class AttentionModule(torch.nn.Module):
-    def __init__(self, args):
+    def __init__(self, in_channel):
 
         super(AttentionModule, self).__init__()
-        self.args = args
+        self.in_channel = in_channel
         self.setup_weights()
         self.init_parameters()
 
     def setup_weights(self):
 
         self.weight_matrix = torch.nn.Parameter(
-            torch.Tensor(self.args.channel_4, self.args.channel_4)
+            torch.Tensor(self.in_channel, self.in_channel)
         )
 
     def init_parameters(self):
@@ -31,21 +31,21 @@ class AttentionModule(torch.nn.Module):
 
 
 class TenorNetworkModule(torch.nn.Module):
-    def __init__(self, args):
+    def __init__(self, in_channel):
 
         super(TenorNetworkModule, self).__init__()
-        self.args = args
+        self.in_channel = in_channel
         self.setup_weights()
         self.init_parameters()
 
     def setup_weights(self):
 
         self.weight_matrix = torch.nn.Parameter(
-            torch.Tensor(self.args.channel_4, self.args.channel_4, 16)
+            torch.Tensor(self.in_channel, self.in_channel, 16)
         )
 
         self.weight_matrix_block = torch.nn.Parameter(
-            torch.Tensor(16, 2 * self.args.channel_4)
+            torch.Tensor(16, 2 * self.in_channel)
         )
         self.bias = torch.nn.Parameter(torch.Tensor(16, 1))
 
@@ -58,9 +58,9 @@ class TenorNetworkModule(torch.nn.Module):
     def forward(self, embedding_1, embedding_2):
 
         scoring = torch.mm(
-            torch.t(embedding_1), self.weight_matrix.view(self.args.channel_4, -1)
+            torch.t(embedding_1), self.weight_matrix.view(self.in_channel, -1)
         )
-        scoring = scoring.view(self.args.channel_4, 16)
+        scoring = scoring.view(self.in_channel, 16)
         scoring = torch.mm(torch.t(scoring), embedding_2)
         combined_representation = torch.cat((embedding_1, embedding_2))
         block_scoring = torch.mm(self.weight_matrix_block, combined_representation)

@@ -1,7 +1,7 @@
 """SimGNN runner."""
 
 from args import argument_parser
-from models import SimGNNTrainer
+from simgnn import SimGNNTrainer
 from utils import tab_printer
 
 

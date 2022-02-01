@@ -27,16 +27,34 @@ def argument_parser():
 
     parser.add_argument(
         "--tensorboard-dir",
-        default="./logs/TensorBoard/",
+        default="./TensorBoard/default/",
         help="Folder with TensorBoard Logs.",
+    )
+
+    parser.add_argument(
+        "--use-sagpool",
+        action="store_true",
+        help="Boolean whether to use SAGPooling or not. Default is False",
+    )
+
+    parser.add_argument(
+        "--use-cos",
+        action="store_true",
+        help="Boolean whether to use CosineSimilarity or not. Default is False",
+    )
+
+    parser.add_argument(
+        "--use-sage",
+        action="store_true",
+        help="Boolean whether to use GrapgSAGE or not. Default is False",
     )
 
     parser.add_argument(
         "-e",
         "--epochs",
         type=int,
-        default=10,
-        help="Number of training epochs. Default is 10.",
+        default=500,
+        help="Number of training epochs. Default is 500.",
     )
 
     parser.add_argument(
@@ -71,29 +89,22 @@ def argument_parser():
     parser.add_argument(
         "--channel-1",
         type=int,
-        default=256,
-        help="Size of 1st convolution output. Default: 256",
+        default=128,
+        help="Size of 1st convolution output. Default: 128",
     )
 
     parser.add_argument(
         "--channel-2",
         type=int,
-        default=128,
-        help="Size of 2nd convolution output. Default: 128",
+        default=64,
+        help="Size of 2nd convolution output. Default: 64",
     )
 
     parser.add_argument(
         "--channel-3",
         type=int,
-        default=64,
-        help="Size of 3rd convolution output. Default: 64",
-    )
-
-    parser.add_argument(
-        "--channel-4",
-        type=int,
         default=32,
-        help="Size of 4th convolution output. Default: 32",
+        help="Size of 3rd convolution output. Default: 32",
     )
 
     parser.add_argument(
