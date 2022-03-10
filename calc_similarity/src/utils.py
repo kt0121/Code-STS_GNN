@@ -33,11 +33,6 @@ def calculate_loss(prediction, target):
 
 
 def calculate_normalized_ged(data):
-    """
-    Calculating the normalized GED for a pair of graphs.
-    :param data: Data table.
-    :return norm_ged: Normalized GED score.
-    """
     norm_ged = data["relation_score"] / (
         0.5 * (len(data["features_1"]) + len(data["features_2"]))
     )

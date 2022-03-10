@@ -7,27 +7,27 @@ def argument_parser():
     parser.add_argument(
         "--train-dir",
         nargs="*",
-        default=["./dataset/SICK/train/"],
+        default=["./dataset/w2v/SICK/train"],
         help="Folder with training graph pair jsons.",
     )
 
     parser.add_argument(
         "--test-dir",
         nargs="*",
-        default=["./dataset/SICK/test/"],
+        default=["./dataset/w2v/SICK/test"],
         help="Folder with testing graph pair jsons.",
     )
 
     parser.add_argument(
         "--valid-dir",
         nargs="*",
-        default=["./dataset/SICK/validation/"],
+        default=["./dataset/w2v/SICK/validation"],
         help="Folder with vaidation graph pair jsons.",
     )
 
     parser.add_argument(
         "--tensorboard-dir",
-        default="./TensorBoard/default/",
+        default="./TensorBoard/default",
         help="Folder with TensorBoard Logs.",
     )
 

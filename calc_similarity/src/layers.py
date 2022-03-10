@@ -64,5 +64,5 @@ class TenorNetworkModule(torch.nn.Module):
         scoring = torch.mm(torch.t(scoring), embedding_2)
         combined_representation = torch.cat((embedding_1, embedding_2))
         block_scoring = torch.mm(self.weight_matrix_block, combined_representation)
-        scores = torch.nn.functional.relu(scoring + block_scoring + self.bias)
+        scores = torch.nn.functional.tanh(scoring + block_scoring + self.bias)
         return scores

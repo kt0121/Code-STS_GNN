@@ -1,15 +1,10 @@
-"""SimGNN runner."""
-
 from args import argument_parser
 from simgnn import SimGNNTrainer
 from utils import tab_printer
 
 
 def main():
-    """
-    Parsing command line parameters, reading data.
-    Fitting and scoring a SimGNN model.
-    """
+
     args = argument_parser()
     tab_printer(args)
     trainer = SimGNNTrainer(args)

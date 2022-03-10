@@ -15,7 +15,7 @@ sts_keys = ("sentence1", "sentence2", "similarity_score")
 
 model = fasttext.load_model("./create_graphs/w2v-model/crawl-300d-2M-subword.bin")
 
-stop_words = ["a", "an", "the", ""]
+stop_words = ["a", "an", "the", "", "."]
 create_dataset(
     train_dataset=sick_train,
     test_dataset=sick_test,
